@@ -1,11 +1,32 @@
 package de.thorbenkuck.cliparser;
 
+import de.thorbenkuck.cliparser.parsing.BlockingQueueInputReader;
+import de.thorbenkuck.cliparser.parsing.CliParser;
+
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by thorben on 24.06.17.
  */
 public interface InputReader {
+
+	static InputReader commandLine(CliParser cliParser) {
+		return commandLine(Printer.getDefault(), cliParser);
+	}
+
+	static InputReader commandLine(Printer printer, CliParser cliParser) {
+		return new CommandLineInputReader(printer, cliParser);
+	}
+
+	static InputReader blockingQueue(CliParser cliParser, BlockingQueue<String> blockingQueue) {
+		return blockingQueue(Printer.getDefault(), cliParser, blockingQueue);
+	}
+
+	static InputReader blockingQueue(Printer printer, CliParser cliParser, BlockingQueue<String> blockingQueue) {
+		return new BlockingQueueInputReader(printer, cliParser, blockingQueue);
+	}
+
 	/**
 	 * Diese Methode stoppt die Eingabe kurzzeitig.
 	 * Bis die Methode {@link #letMeResume()} getriggert wird.
