@@ -71,4 +71,25 @@ Explanation:
 3. The Printer interface provides a simple connection to output something. By default, the <code>DefaultPrinter</code> is printing anything to System.out. But you can do anyhting, if you want to.
 4. The Command interface defines what happens at which entered text. It mainly consists of an identifyer (for example sudo, in the world of unix) and a description about what this command does.
 
-### 
+### The first Example indepth
+
+Lets take a look at the first example again. We can safly ignore the firstline, because the printer is the least interresting part. Looking at the following snipped however is a bit more interresting:
+
+```java
+CliParser cliParser = CliParser.getDefault(printer);
+```
+This returns a new Instance of the <code>StrategyBasedCliParser</code>. Calling it this way, hides all the interresting stuff, for example the strategy itself, but lets take a lookt a it:
+
+If we create a StrategyBasedCliParser, without providing a <code>ParsingStrategy</code> it uses
+```java
+ParsingStrategy.getDefault()
+```
+What does this mean? ParsingStrategy is an interface, which simply provides 3 methods. 
+- hasMoreOptions(StringBuilder enteredText);
+- String getCommand(StringBuilder enteredText);
+- Option getNextOption(StringBuilder enteredText);
+The Strategy itself only decouples how to Parse the text for the command identifier and the given parameters, or options if you want (well, i want). It gets a StringBuilder into the costructor, because a String is immutable and we want you to take care of ripping this entered text appart. If you are wondering at this point, the default ParsingStrategy is: <code>ModifyingSplittingParsingStrategy();</code>. It splitts the given String at " " and checks at maximum the first 2 entrys of the resulting array.
+
+If you wanted to change the type of text-structur for your commands, you could write your own ParsingStrategy. At the default ParsingStrategy you cannot provide a String like: "-command option1 parameter1 option2", however, if you wanted to, you could implement this, writing your own strategy.
+
+If you are feeling like this approach is a verry inefficient approach, you could write your own implementation and make it more efficient.
