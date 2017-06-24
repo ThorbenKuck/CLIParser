@@ -29,7 +29,7 @@ public interface CliParser extends Parser<String, Boolean> {
 
 	void printError(String string);
 
-	void addPreParser(BiConsumer<StringBuilder, String> preParser);
+	void addPreParser(BiConsumer<StringBuilder, CliParser> preParser);
 
 	String preParse(String string);
 }

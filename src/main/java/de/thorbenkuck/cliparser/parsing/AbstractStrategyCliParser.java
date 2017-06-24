@@ -78,6 +78,9 @@ public abstract class AbstractStrategyCliParser extends AbstractCliParser implem
 	public final Boolean parse(String enteredText) {
 		try {
 			enteredText = preParse(enteredText);
+			if(enteredText.equals("")) {
+				return false;
+			}
 			StringBuilder stringBuilder = new StringBuilder(enteredText);
 			return parse(stringBuilder);
 		} finally {

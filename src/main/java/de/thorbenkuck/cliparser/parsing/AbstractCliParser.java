@@ -11,9 +11,9 @@ import java.util.function.BiConsumer;
 public abstract class AbstractCliParser implements CliParser {
 
 	private Printer printer;
-	private String lastCommand;
+	private String lastCommand = "";
 	private final List<Command> commandList = new ArrayList<>();
-	private final Queue<BiConsumer<StringBuilder, String>> preParsingQueue = new LinkedList<>();
+	private final Queue<BiConsumer<StringBuilder, CliParser>> preParsingQueue = new LinkedList<>();
 
 	protected AbstractCliParser(Printer printer) {
 		this.printer = printer;
@@ -59,14 +59,14 @@ public abstract class AbstractCliParser implements CliParser {
 	 * @param preParser
 	 */
 	@Override
-	public final void addPreParser(BiConsumer<StringBuilder, String> preParser) {
+	public final void addPreParser(BiConsumer<StringBuilder, CliParser> preParser) {
 		preParsingQueue.add(preParser);
 	}
 
 	@Override
 	public final String preParse(String string) {
 		StringBuilder stringBuilder = new StringBuilder(string);
-		preParsingQueue.forEach(stringConsumer -> stringConsumer.accept(stringBuilder, string));
+		preParsingQueue.forEach(stringConsumer -> stringConsumer.accept(stringBuilder, this));
 
 		return stringBuilder.toString();
 	}
