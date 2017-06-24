@@ -88,6 +88,7 @@ What does this mean? ParsingStrategy is an interface, which simply provides 3 me
 - hasMoreOptions(StringBuilder enteredText);
 - String getCommand(StringBuilder enteredText);
 - Option getNextOption(StringBuilder enteredText);
+
 The Strategy itself only decouples how to Parse the text for the command identifier and the given parameters, or options if you want (well, i want). It gets a StringBuilder into the costructor, because a String is immutable and we want you to take care of ripping this entered text appart. If you are wondering at this point, the default ParsingStrategy is: <code>ModifyingSplittingParsingStrategy();</code>. It splitts the given String at " " and checks at maximum the first 2 entrys of the resulting array.
 
 If you wanted to change the type of text-structur for your commands, you could write your own ParsingStrategy. At the default ParsingStrategy you cannot provide a String like: "-command option1 parameter1 option2", however, if you wanted to, you could implement this, writing your own strategy.
