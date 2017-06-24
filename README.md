@@ -49,7 +49,7 @@ try {
 }
 ```
 
-Than start the application and you will see a little text, prompting you with:    
+Than start the application and you will see a little text appearing inside your console, prompting you with:    
 #-----------------------------#    
 #Started the CommandLineInputReader#    
 #-----------------------------#    
