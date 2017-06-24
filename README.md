@@ -94,3 +94,29 @@ The Strategy itself only decouples how to Parse the text for the command identif
 If you wanted to change the type of text-structur for your commands, you could write your own ParsingStrategy. At the default ParsingStrategy you cannot provide a String like: "-command option1 parameter1 option2", however, if you wanted to, you could implement this, writing your own strategy.
 
 If you are feeling like this approach is a verry inefficient approach, you could write your own implementation and make it more efficient.
+
+However, back to the roots! Think about it this way. The AbstractStrategyCliParser will do the following:
+```java
+StringBuilder stringBuilder = new StringBuilder(enteredText);
+// get the command identifier
+String command = parsingStrategy.getCommand(stringBuilder);
+// Parse (or let parse) all Options:
+List<Option> options = parseAllOptions(stringBuilder);
+// Find any Command (if present) and run all
+getCommands().stream()
+        // for safe mesurments
+				.filter(Objects::nonNull)
+				.filter(command1 -> command.equals(command1.getIdentifier()))
+				.forEachOrdered(command1 -> {
+					command1.run(options, this);
+				});
+```
+and parseAllOptions looks something like this:
+```java
+while (parsingStrategy.hasMoreOptions(stringBuilder)) {
+  options.add(parsingStrategy.getNextOption(stringBuilder));
+}
+```
+Afterwards, the setLastCommand method of the AbstractCliParser is called and the lastly (successfully of failed) parsed string is safed.
+
+You can change this, if you wanted to, but you can also "live with this monstrousity".
