@@ -4,6 +4,7 @@ import de.thorbenkuck.cliparser.Printer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class AbstractStrategyCliParser extends AbstractCliParser implements StrategyCliParser {
 
@@ -18,17 +19,43 @@ public abstract class AbstractStrategyCliParser extends AbstractCliParser implem
 		setParsingStrategy(parsingStrategy);
 	}
 
-	protected synchronized Boolean parse(StringBuilder stringBuilder){
+	@Override
+	public final void setParsingStrategy(ParsingStrategy parsingStrategy) {
+		this.parsingStrategy = parsingStrategy;
+	}
+
+	@Override
+	public final Boolean parse(String enteredText) {
+		try {
+			enteredText = preParse(enteredText);
+			if (enteredText.equals("")) {
+				return false;
+			}
+			StringBuilder stringBuilder = new StringBuilder(enteredText);
+			return parse(stringBuilder);
+		} finally {
+			setLastCommand(enteredText);
+		}
+	}
+
+	protected synchronized Boolean parse(StringBuilder stringBuilder) {
 		String enteredText = stringBuilder.toString();
 		String command = parsingStrategy.getCommand(stringBuilder);
-		for (Command c : getCommands()) {
-			if (command.equals(c.getIdentifier())) {
-				c.run(parseAllOptions(stringBuilder), this);
-				return true;
-			}
+		List<Option> options = parseAllOptions(stringBuilder);
+		final int[] count = { 0 };
+		getCommands().stream()
+				.filter(Objects::nonNull)
+				.filter(command1 -> command.equals(command1.getIdentifier()))
+				.forEachOrdered(command1 -> {
+					command1.run(options, this);
+					++ count[0];
+				});
+
+		if(count[0] <= 0) {
+			printError("Unknown command: " + enteredText);
 		}
-		printError("Unknown command: " + enteredText);
-		return false;
+
+		return count[0] > 0;
 	}
 
 	/**
@@ -67,25 +94,6 @@ public abstract class AbstractStrategyCliParser extends AbstractCliParser implem
 			return parsingStrategy.getNextOption(command);
 		}
 		return new Option("", "");
-	}
-
-	@Override
-	public final void setParsingStrategy(ParsingStrategy parsingStrategy) {
-		this.parsingStrategy = parsingStrategy;
-	}
-
-	@Override
-	public final Boolean parse(String enteredText) {
-		try {
-			enteredText = preParse(enteredText);
-			if(enteredText.equals("")) {
-				return false;
-			}
-			StringBuilder stringBuilder = new StringBuilder(enteredText);
-			return parse(stringBuilder);
-		} finally {
-			setLastCommand(enteredText);
-		}
 	}
 
 	@Override

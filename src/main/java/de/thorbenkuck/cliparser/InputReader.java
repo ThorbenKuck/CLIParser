@@ -6,9 +6,6 @@ import de.thorbenkuck.cliparser.parsing.CliParser;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 
-/**
- * Created by thorben on 24.06.17.
- */
 public interface InputReader {
 
 	static InputReader commandLine(CliParser cliParser) {

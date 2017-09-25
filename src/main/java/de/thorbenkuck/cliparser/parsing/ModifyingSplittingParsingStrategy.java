@@ -1,68 +1,12 @@
 package de.thorbenkuck.cliparser.parsing;
 
 public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
-	@Override
-	public boolean hasMoreOptions(StringBuilder stringBuilder) {
-		String[] stringParts = stringBuilderToStringArray(stringBuilder);
-		for(String string : stringParts) {
-			if(string.startsWith("-")) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public String getCommand(StringBuilder stringBuilder) {
-		String[] stringArray = stringBuilderToStringArray(stringBuilder);
-		if(stringArray.length > 0 && !stringArray[0].startsWith("-")) {
-			String toReturn = stringArray[0];
-			stringBuilder.delete(0, toReturn.length());
-			cleanup(stringBuilder);
-			return toReturn;
-		} else {
-			return "";
-		}
-	}
 
 	private void cleanup(StringBuilder stringBuilder) {
 		if(stringBuilder.toString().startsWith(" ")) {
 			stringBuilder.delete(0, 1);
 			cleanup(stringBuilder);
 		}
-	}
-
-	@Override
-	public Option getNextOption(StringBuilder stringBuilder) {
-		String[] stringArray = stringBuilderToStringArray(stringBuilder);
-		if(stringArray.length == 0) {
-			return Option.empty();
-		}
-		if(stringArray.length == 1 || isParameterLessOption(stringArray[0], stringArray[1])) {
-			return getSingleOptionAndCleanUp(stringBuilder, stringArray);
-		} else {
-			String s1 = stringArray[0];
-			String s2 = stringArray[1];
-			Option toReturn = getParameterizeOption(s1, s2);
-			stringBuilder.delete(0, stringArray[0].length());
-			cleanup(stringBuilder);
-			stringBuilder.delete(0, stringArray[1].length());
-			cleanup(stringBuilder);
-			return toReturn;
-		}
-	}
-
-	private Option getSingleOptionAndCleanUp(StringBuilder stringBuilder, String[] stringArray) {
-		String string = stringArray[0];
-		Option toReturn = getSingleOption(string);
-		stringBuilder.delete(0, string.length());
-		cleanup(stringBuilder);
-		return toReturn;
-
-	}
-
-	private boolean isOption(String s) {
-		return s.startsWith("-");
 	}
 
 	private String[] stringBuilderToStringArray(StringBuilder stringBuilder) {
@@ -89,6 +33,63 @@ public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
 		return (s1.startsWith("-") && s2.startsWith("-"));
 	}
 
+
+	private Option getSingleOptionAndCleanUp(StringBuilder stringBuilder, String[] stringArray) {
+		String string = stringArray[0];
+		Option toReturn = getSingleOption(string);
+		stringBuilder.delete(0, string.length());
+		cleanup(stringBuilder);
+		return toReturn;
+
+	}
+
+	private boolean isOption(String s) {
+		return s.startsWith("-");
+	}
+
+	@Override
+	public boolean hasMoreOptions(StringBuilder stringBuilder) {
+		String[] stringParts = stringBuilderToStringArray(stringBuilder);
+		for(String string : stringParts) {
+			if(isOption(string)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public String getCommand(StringBuilder stringBuilder) {
+		String[] stringArray = stringBuilderToStringArray(stringBuilder);
+		if(stringArray.length > 0 && !isOption(stringArray[0])) {
+			String toReturn = stringArray[0];
+			stringBuilder.delete(0, toReturn.length());
+			cleanup(stringBuilder);
+			return toReturn;
+		} else {
+			return "";
+		}
+	}
+
+	@Override
+	public Option getNextOption(StringBuilder stringBuilder) {
+		String[] stringArray = stringBuilderToStringArray(stringBuilder);
+		if(stringArray.length == 0) {
+			return Option.empty();
+		}
+		if(stringArray.length == 1 || isParameterLessOption(stringArray[0], stringArray[1])) {
+			return getSingleOptionAndCleanUp(stringBuilder, stringArray);
+		} else {
+			String s1 = stringArray[0];
+			String s2 = stringArray[1];
+			Option toReturn = getParameterizeOption(s1, s2);
+			stringBuilder.delete(0, stringArray[0].length());
+			cleanup(stringBuilder);
+			stringBuilder.delete(0, stringArray[1].length());
+			cleanup(stringBuilder);
+			return toReturn;
+		}
+	}
 //	/**
 //	 * Parsed das nächste OptionPair. Ein OptionPair ist dabei eine BareOption gefolgt von einem Parameter.
 //	 * Dabei ist wichtig, dass die nächste Option eine PairOption ist, ansonsten kann es zu Problemen kommen.
