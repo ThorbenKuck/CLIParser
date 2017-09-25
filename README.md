@@ -1,4 +1,6 @@
-# CLIParser
+# CLIParser 
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.thorbenkuck/NetCom2/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.thorbenkuck/NetCom2)
 
 ### What is this Framework?
 
