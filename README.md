@@ -10,13 +10,23 @@ This framework is for anyone, who needs a highly modular CLI, which can be calle
 
 ### Installation
 
-I hopefully will bring up maven, so it will be easyer, but at this time, i simply dont know how.
+Put this into your pom.xml (if you are using Maven)
 
-At the moment you have to:
-- clone this project
-- run the gradle wrapper
-- create a jar file
-- include the jar file into your project
+```
+<dependency>
+  <groupId>com.github.thorbenkuck</groupId>
+  <artifactId>CLIParser</artifactId>
+  <version>1.0</version>
+</dependency>
+```
+
+Put this into your build.gradle (if you are using Gradle)
+
+```
+dependencies {
+    compile group: 'com.github.thorbenkuck', name: 'CLIParser', version: '1.0'
+}
+```
 
 ### Setup
 
