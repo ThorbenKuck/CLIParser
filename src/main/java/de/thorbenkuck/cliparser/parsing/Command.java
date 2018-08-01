@@ -3,7 +3,6 @@ package de.thorbenkuck.cliparser.parsing;
 import de.thorbenkuck.cliparser.InputReader;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public interface Command {
@@ -24,13 +23,17 @@ public interface Command {
 		return defaultListCommand("help");
 	}
 
+	void addOption(String optionIdentifier, Consumer<String> optionApplier);
+
+	void addOption(String optionIdentifier, Runnable optionApplier);
+
 	String getIdentifier();
 
 	String getDescription();
 
-	void setConsumer(Consumer<List<Option>> consumer);
+	void run(List<Option> options, String[] arguments, CliParser cliParser);
 
-	void setConsumer(BiConsumer<List<Option>, CliParser> consumer);
+	void doNotEvaluateOptions();
 
-	void run(List<Option> options, CliParser cliParser);
+	void doEvaluateOptions();
 }

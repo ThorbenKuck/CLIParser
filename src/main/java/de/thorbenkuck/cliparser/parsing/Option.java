@@ -64,6 +64,10 @@ public class Option implements Serializable {
 		return parameter;
 	}
 
+	public boolean isEmpty() {
+		return isEmpty(this);
+	}
+
 	public static Option empty() {
 		return new Option();
 	}

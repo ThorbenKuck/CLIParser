@@ -1,18 +1,17 @@
 package de.thorbenkuck.cliparser;
 
 import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 
 public abstract class AbstractInputReader implements InputReader {
 
-	private String readyForInputChar = "$";
-	private CountDownLatch countDownLatch = new CountDownLatch(0);
-	private final Lock countDownLatchLock = new ReentrantLock();
-	private String prefix;
+	private final Semaphore semaphore = new Semaphore(1);
 	protected boolean waitingForInput;
+	private String readyForInputChar = "$";
+	private String startupMessage = "\n#----------------------------------#" +
+			"\n#Started the CommandLineInputReader#" +
+			"\n#----------------------------------#";
+	private String prefix;
 	private Printer printer;
 	private boolean running;
 
@@ -20,26 +19,36 @@ public abstract class AbstractInputReader implements InputReader {
 		this.printer = printer;
 	}
 
+	private void printStartMessage() {
+		printMessage(startupMessage);
+	}
+
 	@Override
 	public final void letMeWait() {
 		try {
-			tryResetCountDownLatch();
-			countDownLatch.await();
+			semaphore.acquire();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		} finally {
-			countDownLatchLock.unlock();
 		}
-	}
-
-	private void tryResetCountDownLatch() {
-		countDownLatchLock.lock();
-		countDownLatch = new CountDownLatch(1);
 	}
 
 	@Override
 	public final void letMeResume() {
-		countDownLatch.countDown();
+		semaphore.release();
+	}
+
+	/**
+	 * Diese Methode ist eine kürzere Schreibweise für printMessage(message, true);
+	 * D.h. sie gibt den Prefix mit aus.
+	 *
+	 * @param message die Nachricht, welche Ausgegeben werden soll.
+	 * @Override protected void printStartMessage() {
+	 * printMessage();
+	 * }
+	 */
+	@Override
+	public final void printMessage(String message) {
+		printMessage(message, true);
 	}
 
 	@Override
@@ -47,6 +56,12 @@ public abstract class AbstractInputReader implements InputReader {
 		running = false;
 		letMeResume();
 	}
+
+	@Override
+	public final void setStartupMessage(String startupMessage) {
+		this.startupMessage = startupMessage;
+	}
+
 	/**
 	 * Setzt den prefix für die Console-Ausgabe.
 	 *
@@ -61,17 +76,14 @@ public abstract class AbstractInputReader implements InputReader {
 	 * Startet den CommandLineInputReader.
 	 * Dabei werden einige Abhängigkeiten erstellt.
 	 * Sollte ein Fehler auftreten, so wird dieser durch gereicht. Dies kännte abgefangen werden, muss aber nicht.
-	 *
-	 * @throws IOException          wenn der Reader unterbrochen wird
-	 * @throws InterruptedException wenn das Warten abgebrochen wird.
 	 */
 	@Override
-	public final void start() throws IOException, InterruptedException {
+	public final void start() {
 		running = true;
 		printStartMessage();
 		while (running) {
 			try {
-				countDownLatch.await(10, TimeUnit.SECONDS);
+				semaphore.acquire();
 				printInputSignal();
 				waitingForInput = true;
 				String line = getNextString();
@@ -82,34 +94,29 @@ public abstract class AbstractInputReader implements InputReader {
 				e.printStackTrace();
 				printMessage("Stopping because of Thread interruption!");
 				stop();
-			} catch(IOException e) {
+			} catch (IOException e) {
 				printMessage("Error while reading!");
 				e.printStackTrace();
 			} catch (Exception e) {
-				printMessage("\n\nUnexpected error!!!!\n\n#-----------------#\n" + e.getClass().getSimpleName() + "\n", false);
+				printMessage("\n\nUnexpected error!\n#-----------------#\n" + e.getClass().getSimpleName() + "\n", false);
 				e.printStackTrace(System.out);
 				printMessage("\n#-----------------#\n\n", false);
+				stop();
+			} finally {
+				semaphore.release();
 			}
 		}
 		printMessage("CommandLineInputReader shutdown!");
 	}
 
-	/**
-	 * Diese Methode ist eine kürzere Schreibweise für printMessage(message, true);
-	 * D.h. sie gibt den Prefix mit aus.
-	 *
-	 * @param message die Nachricht, welche Ausgegeben werden soll.
-	 */
 	@Override
-	public final void printMessage(String message) {
-		printMessage(message, true);
+	public final void setReadyForInputChar(String s) {
+		this.readyForInputChar = s;
 	}
 
 	protected abstract void executeCommand(String line);
 
 	protected abstract String getNextString() throws InterruptedException, IOException;
-
-	protected abstract void printStartMessage();
 
 	/**
 	 * Diese Methode zentralisiert die Ausgabe an die Console.
@@ -131,11 +138,5 @@ public abstract class AbstractInputReader implements InputReader {
 	 */
 	protected void printInputSignal() {
 		printMessage("\n" + readyForInputChar + " ", true);
-	}
-
-
-	@Override
-	public final void setReadyForInputChar(String s) {
-		this.readyForInputChar = s;
 	}
 }

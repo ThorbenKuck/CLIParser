@@ -36,13 +36,6 @@ public class CommandLineInputReader extends AbstractInputReader {
 		this.cliParser = cliParser;
 	}
 
-	@Override
-	protected void printStartMessage() {
-		printMessage("\n\n\n#-----------------------------#\n" +
-				"#Started the CommandLineInputReader#\n" +
-				"#-----------------------------#\n");
-	}
-
 	/**
 	 * Wartet auf die Eingabe von einem Nutzer.
 	 *

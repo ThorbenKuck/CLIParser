@@ -3,7 +3,7 @@ package de.thorbenkuck.cliparser.parsing;
 public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
 
 	private void cleanup(StringBuilder stringBuilder) {
-		if(stringBuilder.toString().startsWith(" ")) {
+		if (stringBuilder.toString().startsWith(" ")) {
 			stringBuilder.delete(0, 1);
 			cleanup(stringBuilder);
 		}
@@ -15,14 +15,14 @@ public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
 	}
 
 	private Option getSingleOption(String identifier) {
-		if(identifier.startsWith("-")) {
+		if (identifier.startsWith("-")) {
 			return getSingleOption(identifier.substring(1));
 		}
 		return new Option(identifier, "");
 	}
 
 	private Option getParameterizeOption(String s1, String s2) {
-		if(s1.startsWith("-")) {
+		if (s1.startsWith("-")) {
 			return getParameterizeOption(s1.substring(1), s2);
 		} else {
 			return new Option(s1, s2);
@@ -50,8 +50,8 @@ public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
 	@Override
 	public boolean hasMoreOptions(StringBuilder stringBuilder) {
 		String[] stringParts = stringBuilderToStringArray(stringBuilder);
-		for(String string : stringParts) {
-			if(isOption(string)) {
+		for (String string : stringParts) {
+			if (isOption(string)) {
 				return true;
 			}
 		}
@@ -61,7 +61,7 @@ public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
 	@Override
 	public String getCommand(StringBuilder stringBuilder) {
 		String[] stringArray = stringBuilderToStringArray(stringBuilder);
-		if(stringArray.length > 0 && !isOption(stringArray[0])) {
+		if (stringArray.length > 0 && !isOption(stringArray[0])) {
 			String toReturn = stringArray[0];
 			stringBuilder.delete(0, toReturn.length());
 			cleanup(stringBuilder);
@@ -74,10 +74,10 @@ public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
 	@Override
 	public Option getNextOption(StringBuilder stringBuilder) {
 		String[] stringArray = stringBuilderToStringArray(stringBuilder);
-		if(stringArray.length == 0) {
+		if (stringArray.length == 0) {
 			return Option.empty();
 		}
-		if(stringArray.length == 1 || isParameterLessOption(stringArray[0], stringArray[1])) {
+		if (stringArray.length == 1 || isParameterLessOption(stringArray[0], stringArray[1])) {
 			return getSingleOptionAndCleanUp(stringBuilder, stringArray);
 		} else {
 			String s1 = stringArray[0];
@@ -89,6 +89,19 @@ public class ModifyingSplittingParsingStrategy implements ParsingStrategy {
 			cleanup(stringBuilder);
 			return toReturn;
 		}
+	}
+
+	@Override
+	public String[] getArguments(StringBuilder stringBuilder) {
+		if (stringBuilder.toString().contains("-")) {
+			return null;
+		}
+
+		if (!stringBuilder.toString().contains(" ")) {
+			return new String[0];
+		}
+
+		return stringBuilder.toString().split(" ");
 	}
 //	/**
 //	 * Parsed das nächste OptionPair. Ein OptionPair ist dabei eine BareOption gefolgt von einem Parameter.

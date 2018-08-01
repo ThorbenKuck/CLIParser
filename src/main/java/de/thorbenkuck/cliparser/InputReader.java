@@ -3,7 +3,6 @@ package de.thorbenkuck.cliparser;
 import de.thorbenkuck.cliparser.parsing.BlockingQueueInputReader;
 import de.thorbenkuck.cliparser.parsing.CliParser;
 
-import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 
 public interface InputReader {
@@ -47,6 +46,8 @@ public interface InputReader {
 
 	void stop();
 
+	void setStartupMessage(String startupMessage);
+
 	/**
 	 * Setzt den prefix für die Console-Ausgabe.
 	 *
@@ -58,11 +59,8 @@ public interface InputReader {
 	 * Startet den CommandLineInputReader.
 	 * Dabei werden einige Abhängigkeiten erstellt.
 	 * Sollte ein Fehler auftreten, so wird dieser durch gereicht. Dies kännte abgefangen werden, muss aber nicht.
-	 *
-	 * @throws IOException          wenn der Reader unterbrochen wird
-	 * @throws InterruptedException wenn das Warten auf Input abgebrochen wird.
 	 */
-	void start() throws IOException, InterruptedException;
+	void start();
 
 	void setReadyForInputChar(String s);
 }

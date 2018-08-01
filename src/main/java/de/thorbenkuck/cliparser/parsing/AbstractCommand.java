@@ -4,7 +4,10 @@ import de.thorbenkuck.cliparser.CommandLineInputReader;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -20,15 +23,14 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractCommand implements Serializable, Command {
 
-
 	private static final long serialVersionUID = 4414647424220391756L;
-	private String identifier;
-	private String description;
-	private final ArrayList<Option> options;
-	private BiConsumer<List<Option>, CliParser> parserConsumer;
-	private CliParser cliParser;
+	private final String identifier;
+	private final String description;
+	private final Map<String, Consumer<String>> optionMapping = new HashMap<>();
+	private final List<Option> options = new ArrayList<>();
+	private final AtomicBoolean evaluateOptions = new AtomicBoolean(true);
 
-	public AbstractCommand(String identifier) {
+	protected AbstractCommand(String identifier) {
 		this(identifier, "");
 	}
 
@@ -38,67 +40,35 @@ public abstract class AbstractCommand implements Serializable, Command {
 	 * @param identifier  der Identifier
 	 * @param description die Description
 	 */
-	public AbstractCommand(String identifier, String description) {
-		this(identifier, (option, parser) -> {}, description);
-	}
-	/**
-	 * Erstellt einen Comm, ohne Beschreibung.
-	 *
-	 * @param identifier   Der Identifier dieses Comm's
-	 * @param parserConsumer Die QueuedAction für diesen Comm
-	 */
-	public AbstractCommand(String identifier, Consumer<List<Option>> parserConsumer) {
-		this(identifier, parserConsumer, "");
-	}
-
-	/**
-	 * Erstellt einen Vollwertigen Comm.
-	 * Ein Comm ist genau dann vollwertig, wenn er einen gesetzte Identifier, eine gesetzte Description und QueuedAction besitzt.
-	 *
-	 * @param identifier   der Identifier dieses Comm's
-	 * @param parserConsumer die QueuedAction für diesen Comm
-	 * @param description  Die Beschreibung des Comm's
-	 */
-	public AbstractCommand(String identifier, Consumer<List<Option>> parserConsumer, String description) {
+	protected AbstractCommand(String identifier, String description) {
 		this.identifier = identifier;
 		this.description = description;
-		this.parserConsumer = wrapConsumer(parserConsumer);
-		this.options = new ArrayList<>();
 	}
 
-	/**
-	 * Erstellt einen Comm, ohne Beschreibung.
-	 *
-	 * @param identifier   Der Identifier dieses Comm's
-	 * @param parserConsumer Die QueuedAction für diesen Comm
-	 */
-	public AbstractCommand(String identifier, BiConsumer<List<Option>, CliParser> parserConsumer) {
-		this(identifier, parserConsumer, "");
+	protected final void evaluateOptions() {
+		for (Option option : options) {
+			if (!option.isEmpty()) {
+				Consumer<String> consumer;
+				synchronized (optionMapping) {
+					consumer = optionMapping.get(option.getOptionIdentifier());
+				}
+				consumer.accept(option.getParameter());
+			}
+		}
 	}
 
-	/**
-	 * Erstellt einen Vollwertigen Comm.
-	 * Ein Comm ist genau dann vollwertig, wenn er einen gesetzte Identifier, eine gesetzte Description und QueuedAction besitzt.
-	 *
-	 * @param identifier   der Identifier dieses Comm's
-	 * @param parserConsumer die QueuedAction für diesen Comm
-	 * @param description  Die Beschreibung des Comm's
-	 */
-	public AbstractCommand(String identifier, BiConsumer<List<Option>, CliParser> parserConsumer, String description) {
-		this.identifier = identifier;
-		this.description = description;
-		this.parserConsumer = parserConsumer;
-		this.options = new ArrayList<>();
+	protected abstract void handle(String[] arguments, CliParser parser);
+
+	@Override
+	public final void addOption(String optionIdentifier, Consumer<String> optionApplier) {
+		synchronized (optionMapping) {
+			optionMapping.put(optionIdentifier, optionApplier);
+		}
 	}
 
 	@Override
-	public String toString() {
-		return "Comm{" +
-				"identifier='" + identifier + '\'' +
-				", description='" + description + '\'' +
-				", options=" + options +
-				", parserConsumer=" + parserConsumer +
-				'}';
+	public final void addOption(String optionIdentifier, Runnable optionApplier) {
+		addOption(optionIdentifier, s -> optionApplier.run());
 	}
 
 	/**
@@ -107,7 +77,7 @@ public abstract class AbstractCommand implements Serializable, Command {
 	 * @return den Identifier
 	 */
 	@Override
-	public String getIdentifier() {
+	public final String getIdentifier() {
 		return identifier;
 	}
 
@@ -117,42 +87,38 @@ public abstract class AbstractCommand implements Serializable, Command {
 	 * @return die Description
 	 */
 	@Override
-	public String getDescription() {
+	public final String getDescription() {
 		return description;
-	}
-
-	@Override
-	public void setConsumer(Consumer<List<Option>> consumer) {
-		this.parserConsumer = wrapConsumer(consumer);
-	}
-
-	@Override
-	public void setConsumer(BiConsumer<List<Option>, CliParser> consumer) {
-		this.parserConsumer = consumer;
 	}
 
 	/**
 	 * Bei Aufruf dieser Methode, führt der Comm seine intern gesetzte QueuedAction aus.
 	 */
 	@Override
-	public void run(List<Option> options, CliParser cliParser) {
-		requireConsumer();
-		parserConsumer.accept(options, cliParser);
-	}
-
-	protected void requireConsumer() {
-		if(parserConsumer == null) {
-			throw new IllegalStateException("Consumer required!");
+	public final synchronized void run(List<Option> options, String[] arguments, CliParser cliParser) {
+		this.options.addAll(options);
+		if (evaluateOptions.get()) {
+			evaluateOptions();
 		}
+		handle(arguments, cliParser);
+		this.options.clear();
 	}
 
-	protected final BiConsumer<List<Option>, CliParser> wrapConsumer(Consumer<List<Option>> consumer) {
-		return new OptionConsumerWrapper(consumer);
+	@Override
+	public final void doNotEvaluateOptions() {
+		evaluateOptions.set(false);
 	}
 
-	protected final void runSynchronized(Runnable runnable) {
-		synchronized (options) {
-			runnable.run();
-		}
+	@Override
+	public final void doEvaluateOptions() {
+		evaluateOptions.set(true);
+	}
+
+	@Override
+	public String toString() {
+		return "Command{" +
+				"identifier='" + identifier + '\'' +
+				", description='" + description + '\'' +
+				'}';
 	}
 }

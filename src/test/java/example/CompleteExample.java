@@ -5,12 +5,9 @@ import de.thorbenkuck.cliparser.InputReader;
 import de.thorbenkuck.cliparser.Printer;
 import de.thorbenkuck.cliparser.parsing.*;
 
-import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static junit.framework.TestCase.assertTrue;
 
 public class CompleteExample {
 
@@ -25,25 +22,11 @@ public class CompleteExample {
 		InputReader inputReader = new CommandLineInputReader(printer, cliParser);
 		cliParser.addCommand(Command.defaultStopCommand(inputReader));
 		cliParser.addCommand(Command.defaultListCommand());
-		cliParser.addCommand(new DefaultCommand("random"
-				, (options, parser) -> {
-					int bound = 100;
-					for(Option option : options) {
-						if (option.getOptionIdentifier().equals("o")) {
-							bound = Integer.parseInt(option.getParameter());
-						}
-					}
-					parser.print("" + ThreadLocalRandom.current().nextInt(bound));
-				}, "Prints a random number"));
+		cliParser.addCommand(new RandomCommand());
 
 		cliParser.addPreParser(PreParser.bangBang());
 
-		try {
-			inputReader.start();
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-			assertTrue(false);
-		}
+		inputReader.start();
 	}
 
 	public void testBlockingQueue() {
@@ -62,11 +45,21 @@ public class CompleteExample {
 			}
 		}).start();
 
-		try {
-			inputReader.start();
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
-			assertTrue(false);
+		inputReader.start();
+	}
+
+	private final class RandomCommand extends AbstractCommand {
+
+		private int bound = 100;
+
+		protected RandomCommand() {
+			super("random", "Prints a random Number");
+			addOption("o", (s -> bound = Integer.parseInt(s)));
+		}
+
+		@Override
+		protected void handle(String[] arguments, CliParser parser) {
+			parser.print("" + ThreadLocalRandom.current().nextInt(bound));
 		}
 	}
 

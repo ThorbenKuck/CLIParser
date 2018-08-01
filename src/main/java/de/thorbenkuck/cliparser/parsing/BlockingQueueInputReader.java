@@ -9,8 +9,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class BlockingQueueInputReader extends AbstractInputReader {
 
-	private CliParser cliParser;
 	private final BlockingQueue<String> blockingQueue;
+	private CliParser cliParser;
 
 	public BlockingQueueInputReader() {
 		this(Printer.getDefault());
@@ -56,12 +56,5 @@ public class BlockingQueueInputReader extends AbstractInputReader {
 		String string = blockingQueue.take();
 		printMessage(string + "\n", false);
 		return string;
-	}
-
-	@Override
-	protected void printStartMessage() {
-		printMessage("\n\n\n#-----------------------------#\n" +
-				"#Started the CommandLineInputReader#\n" +
-				"#-----------------------------#\n");
 	}
 }

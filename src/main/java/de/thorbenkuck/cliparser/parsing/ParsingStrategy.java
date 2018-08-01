@@ -12,4 +12,6 @@ public interface ParsingStrategy {
 
 	Option getNextOption(StringBuilder enteredText);
 
+	String[] getArguments(StringBuilder stringBuilder);
+
 }

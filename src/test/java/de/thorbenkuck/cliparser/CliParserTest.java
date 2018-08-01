@@ -1,9 +1,9 @@
 package de.thorbenkuck.cliparser;
 
+import de.thorbenkuck.cliparser.parsing.AbstractCommand;
 import de.thorbenkuck.cliparser.parsing.CliParser;
-import de.thorbenkuck.cliparser.parsing.DefaultCommand;
-import de.thorbenkuck.cliparser.parsing.Option;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -27,15 +27,7 @@ public class CliParserTest {
 		enteredText = "test -higher 10 -higher 20 -lower 5";
 
 		// Act
-		cliParser.addCommand(new DefaultCommand("test", (options, parser) -> {
-			for(Option option : options) {
-				if(option.getOptionIdentifier().equals("higher")) {
-					count += Integer.parseInt(option.getParameter());
-				} else if(option.getOptionIdentifier().equals("lower")) {
-					count -= Integer.parseInt(option.getParameter());
-				}
-			}
-		}));
+		cliParser.addCommand(new TestCommand());
 		cliParser.parse(enteredText);
 
 		// Assert
@@ -48,24 +40,46 @@ public class CliParserTest {
 		enteredText = "test -higher 10 -h -l -higher 20 -higher 10 -lower 10 -l -lower 5";
 
 		// Act
-		cliParser.addCommand(new DefaultCommand("test", (options, parser) -> {
-			for(Option option : options) {
-				if(option.getOptionIdentifier().equals("h")) {
-					count += 5;
-				} else if(option.getOptionIdentifier().equals("higher")) {
-					count += Integer.parseInt(option.getParameter());
-				} else if(option.getOptionIdentifier().equals("l")) {
-					count -= 5;
-				} else if(option.getOptionIdentifier().equals("lower")) {
-					count -= Integer.parseInt(option.getParameter());
-				} else {
-					parser.printError("Unknown Option: " + option);
-				}
-			}
-		}));
+		cliParser.addCommand(new TestCommand());
 		cliParser.parse(enteredText);
 
 		// Assert
 		assertEquals(20, count);
+	}
+
+	@Ignore
+	@Test
+	public void integrationTest() {
+		// Arrange
+		enteredText = "test -higher 10 -h -l -higher 20 -higher 10 -lower 10 -l -lower 5 20 10 15";
+
+		// Act
+		cliParser.addCommand(new TestCommand());
+		cliParser.parse(enteredText);
+
+	}
+
+	private class TestCommand extends AbstractCommand {
+
+		protected TestCommand() {
+			super("test");
+			doNotEvaluateOptions();
+			addOption("h", s -> count += 5);
+			addOption("l", s -> count -= 5);
+			addOption("higher", s -> count += Integer.parseInt(s));
+			addOption("lower", s -> count -= Integer.parseInt(s));
+		}
+
+		@Override
+		protected void handle(String[] arguments, CliParser parser) {
+			if (arguments.length == 0) {
+				evaluateOptions();
+			}
+			for (String string : arguments) {
+				count = Integer.parseInt(string);
+				evaluateOptions();
+				parser.print("Count: " + count);
+			}
+		}
 	}
 }
