@@ -42,9 +42,6 @@ public abstract class AbstractInputReader implements InputReader {
 	 * D.h. sie gibt den Prefix mit aus.
 	 *
 	 * @param message die Nachricht, welche Ausgegeben werden soll.
-	 * @Override protected void printStartMessage() {
-	 * printMessage();
-	 * }
 	 */
 	@Override
 	public final void printMessage(String message) {
