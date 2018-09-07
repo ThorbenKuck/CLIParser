@@ -15,7 +15,7 @@ import java.io.InputStreamReader;
  */
 public class CommandLineInputReader extends AbstractInputReader {
 
-	private BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
+	private final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 	private Parser<String, Boolean> cliParser;
 
 	/**
@@ -27,12 +27,11 @@ public class CommandLineInputReader extends AbstractInputReader {
 	}
 
 	public CommandLineInputReader(Printer printer) {
-		this(Printer.getDefault(), CliParser.getDefault(printer));
+		this(printer, CliParser.getDefault(printer));
 	}
 
 	public CommandLineInputReader(Printer printer, CliParser cliParser) {
 		super(printer);
-		bufferedReader = new BufferedReader(new InputStreamReader(System.in));
 		this.cliParser = cliParser;
 	}
 

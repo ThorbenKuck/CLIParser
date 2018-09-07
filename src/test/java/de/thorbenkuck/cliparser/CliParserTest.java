@@ -59,6 +59,18 @@ public class CliParserTest {
 
 	}
 
+	@Ignore
+	@Test
+	public void integrationTestFails() {
+		// Arrange
+		enteredText = "test -higher 15";
+
+		// Act
+		cliParser.addCommand(new TestCommand());
+		cliParser.parse(enteredText);
+
+	}
+
 	private class TestCommand extends AbstractCommand {
 
 		protected TestCommand() {

@@ -7,6 +7,11 @@
     <name>CLIParser</name>
     <description>A Strategy based CLI Parser</description>
     <url>https://github.com/ThorbenKuck/CLIParser</url>
+    <properties>
+        <project.build.sourceEncoding>
+            UTF-8
+        </project.build.sourceEncoding>
+    </properties>
 
     <scm>
         <connection>scm:git:git@github.com:ThorbenKuck/CLIParser.git</connection>
