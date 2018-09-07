@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.thorbenkuck</groupId>
     <artifactId>CLIParser</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
     <packaging>jar</packaging>
     <name>CLIParser</name>
     <description>A Strategy based CLI Parser</description>
